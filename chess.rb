@@ -14,12 +14,12 @@ class Board
     @black_pieces[11], @black_pieces[12] = @black_pieces[12], @black_pieces[11]
     set_pieces(@white_pieces, :white)
     set_pieces(@black_pieces, :black)
-
-
-     # white_pieces[0].location = @spaces[8]
   end
 
-
+  def play
+    p @white_pieces[4].valid_move?([1,3])
+    p @white_pieces[4].valid_move?([7,2])
+  end
 
   def generate_spaces
     64.times do |position|
@@ -130,17 +130,29 @@ class King < Pieces
   def initialize(color)
     super(color)
   end
-  def move
+  def move(move_to)
+  end
+  def valid_move?(move_to)
+    possible_moves = [-1,1,0,-1,1].permutation(2).to_a.uniq - [[0,0]]
+    possible_moves.map! {|pos| [pos[0]+location[0], pos[1]+location[1]]}
+    possible_moves.select! do |pos|
+      pos if (0..7).include?(pos[0]) and (0..7).include?(pos[1])
+    end
+
+    p "possible moves : #{possible_moves}"
+    possible_moves.include?(move_to)
   end
 end
 
 
 board = Board.new
 
-board.white_pieces.each do |piece|
-  p "#{piece.class}, #{piece.color}, #{piece.location}"
-end
-board.black_pieces.each do |piece|
-  p "#{piece.class}, #{piece.color}, #{piece.location}"
-end
-board.spaces.each {|space| p "#{space.position}, #{space.color}, #{space.contains.class}"}
+board.play
+
+# board.white_pieces.each do |piece|
+# #  p "#{piece.class}, #{piece.color}, #{piece.location}"
+# end
+# board.black_pieces.each do |piece|
+# #  p "#{piece.class}, #{piece.color}, #{piece.location}"
+# end
+#board.spaces.each {|space| p "#{space.position}, #{space.color}, #{space.contains.class}"}
