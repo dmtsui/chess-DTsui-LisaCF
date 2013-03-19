@@ -1,14 +1,16 @@
+require 'debugger'
 class ChessGame
 end
 
 class Board
-  attr_accessor :spaces, :white_pieces, :black_pieces
+  attr_accessor :spaces, :white_pieces, :black_pieces, :captured
 
   def initialize
     @spaces = []
-    generate_spaces
+    @captured = []
     @white_pieces = []
     @black_pieces = []
+    generate_spaces
     generate_pieces(@white_pieces, :white)
     generate_pieces(@black_pieces, :black).reverse!
     @black_pieces[11], @black_pieces[12] = @black_pieces[12], @black_pieces[11]
@@ -17,8 +19,15 @@ class Board
   end
 
   def play
-    p @white_pieces[4].valid_move?([1,3])
-    p @white_pieces[4].valid_move?([7,2])
+    @white_pieces[11].move([2,3])
+    @white_pieces[11].move([3,3])
+    @white_pieces[11].move([4,3])
+    @white_pieces[11].move([5,3])
+    @white_pieces[11].move([6,3])
+    test_piece = @white_pieces[11]
+    p "pawn is at new space :#{test_piece.location}"
+     p "captured pieces :#{@captured.count}"
+    @spaces.each {|space| p "#{space.position}, #{space.color}, #{space.contains.class}-#{space.contains && space.contains.color}"}
   end
 
   def generate_spaces
@@ -34,16 +43,16 @@ class Board
     end
   end
   def generate_pieces(piece_array, color)
-    piece_array << Rook.new(color)
-    piece_array << Knight.new(color)
-    piece_array << Bishop.new(color)
-    piece_array << Queen.new(color)
-    piece_array << King.new(color)
-    piece_array << Bishop.new(color)
-    piece_array << Knight.new(color)
-    piece_array << Rook.new(color)
+    piece_array << Rook.new(color, self)
+    piece_array << Knight.new(color, self)
+    piece_array << Bishop.new(color, self)
+    piece_array << Queen.new(color, self)
+    piece_array << King.new(color, self)
+    piece_array << Bishop.new(color, self)
+    piece_array << Knight.new(color, self)
+    piece_array << Rook.new(color, self)
     8.times do
-      piece_array << Pawn.new(color)
+      piece_array << Pawn.new(color, self)
     end
     piece_array
   end
@@ -71,9 +80,10 @@ class Player
 end
 
 class Pieces
-  attr_accessor :color, :location
-  def initialize(color)
+  attr_accessor :color, :location, :board
+  def initialize(color, board)
     @color = color
+    @board = board
   end
 
   def location
@@ -84,64 +94,116 @@ class Pieces
     @location = space_node
   end
 
+  def is_space_open?(move_to)
+    position = move_to[0] * 8 + move_to[1]
+    if @board.spaces[position].contains and @board.spaces[position].contains.color == @color
+      false
+    else
+      true
+    end
+  end
+
+  def capture_piece(position)
+    debugger
+    @board.captured << @board.spaces[position].contains
+  end
+
+  def has_piece_to_capture?(position)
+    if @board.spaces[position].contains and @board.spaces[position].contains.color != @color
+      true
+    else
+      false
+    end
+  end
+
 end
 
 class Pawn < Pieces
   attr_accessor :color
-  def initialize(color)
-    super(color)
-  end
-  def move
-  end
-end
-
-class Rook < Pieces
-  def initialize(color)
-    super(color)
-  end
-  def move
-  end
-end
-
-class Bishop < Pieces
-  def initialize(color)
-    super(color)
-  end
-  def move
-  end
-end
-class Knight < Pieces
-  def initialize(color)
-    super(color)
-  end
-  def move
-  end
-end
-
-class Queen < Pieces
-  def initialize(color)
-    super(color)
-  end
-  def move
-  end
-end
-
-class King < Pieces
-  def initialize(color)
-    super(color)
+  def initialize(color, board)
+    super(color, board)
   end
   def move(move_to)
+    position = move_to[0] * 8 + move_to[1]
+    if valid_move?(move_to)
+      capture_piece(position) if has_piece_to_capture?(position)
+      @location.contains = nil
+      @board.spaces[position].contains = self
+      @location = @board.spaces[position]
+    else
+      p "Invalid Move!"
+    end
   end
+
   def valid_move?(move_to)
     possible_moves = [-1,1,0,-1,1].permutation(2).to_a.uniq - [[0,0]]
     possible_moves.map! {|pos| [pos[0]+location[0], pos[1]+location[1]]}
     possible_moves.select! do |pos|
       pos if (0..7).include?(pos[0]) and (0..7).include?(pos[1])
     end
-
     p "possible moves : #{possible_moves}"
-    possible_moves.include?(move_to)
+    is_space_open?(move_to) && possible_moves.include?(move_to)
   end
+end
+
+class Rook < Pieces
+  def initialize(color, board)
+    super(color, board)
+  end
+  def move
+  end
+end
+
+class Bishop < Pieces
+  def initialize(color, board)
+    super(color, board)
+  end
+  def move
+  end
+end
+class Knight < Pieces
+  def initialize(color, board)
+    super(color, board)
+  end
+  def move
+  end
+end
+
+class Queen < Pieces
+  def initialize(color, board)
+    super(color, board)
+  end
+  def move
+  end
+end
+
+class King < Pieces
+  attr_accessor :color
+  def initialize(color, board)
+    super(color, board)
+  end
+  def move(move_to)
+    position = move_to[0] * 8 + move_to[1]
+    if valid_move?(move_to)
+      capture_piece(position) if has_piece_to_capture?(position)
+      @location.contains = nil
+      @board.spaces[position].contains = self
+      @location = @board.spaces[position]
+    else
+      p "Invalid Move!"
+    end
+  end
+
+  def valid_move?(move_to)
+    possible_moves = [-1,1,0,-1,1].permutation(2).to_a.uniq - [[0,0]]
+    possible_moves.map! {|pos| [pos[0]+location[0], pos[1]+location[1]]}
+    possible_moves.select! do |pos|
+      pos if (0..7).include?(pos[0]) and (0..7).include?(pos[1])
+    end
+    p "possible moves : #{possible_moves}"
+    is_space_open?(move_to) && possible_moves.include?(move_to)
+  end
+
 end
 
 
