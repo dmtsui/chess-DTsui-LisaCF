@@ -41,7 +41,7 @@ class Manager < Employee
     while queue.count > 0
       #debugger
       current_employee = queue.shift
-      unless current_employee.class == Employee
+      if current_employee.respond_to?(:employees)#class == Employee
         all_employees += current_employee.employees
         queue += current_employee.employees
       end
