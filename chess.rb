@@ -20,14 +20,13 @@ class Board
 
   def play
     @white_pieces[11].move([2,3])
-    @white_pieces[11].move([3,3])
-    @white_pieces[11].move([4,3])
-    @white_pieces[11].move([5,3])
-    @white_pieces[11].move([6,3])
+    @white_pieces[12].move([3,4])
+    @white_pieces[11].move([2,4])
+    @white_pieces[13].move([4,5])
     test_piece = @white_pieces[11]
-    p "pawn is at new space :#{test_piece.location}"
-     p "captured pieces :#{@captured.count}"
-    @spaces.each {|space| p "#{space.position}, #{space.color}, #{space.contains.class}-#{space.contains && space.contains.color}"}
+  #   p "pawn is at new space :#{test_piece.location}"
+  #    p "captured pieces :#{@captured.count}"
+  #   @spaces.each {|space| p "#{space.position}, #{space.color}, #{space.contains.class}-#{space.contains && space.contains.color}"}
   end
 
   def generate_spaces
@@ -136,12 +135,25 @@ class Pawn < Pieces
   end
 
   def valid_move?(move_to)
-    possible_moves = [-1,1,0,-1,1].permutation(2).to_a.uniq - [[0,0]]
+    position = move_to[0] * 8 + move_to[1]
+    if @color == :white
+      possible_moves = [[1, 0]]
+      possible_moves += [[2,0]] if location[0] == 1
+      possible_moves += [[1, -1], [1, 1]] if has_piece_to_capture?(position)
+    else
+      possible_moves = [[-1, 0]]
+      possible_moves += [[-2,0]] if location[0] == 6
+      possible_moves += [[-1, -1], [-1, 1]] if has_piece_to_capture?(position)
+    end
+
     possible_moves.map! {|pos| [pos[0]+location[0], pos[1]+location[1]]}
     possible_moves.select! do |pos|
       pos if (0..7).include?(pos[0]) and (0..7).include?(pos[1])
     end
-    p "possible moves : #{possible_moves}"
+    p "move #{move_to} possible moves = #{possible_moves}"
+
+
+
     is_space_open?(move_to) && possible_moves.include?(move_to)
   end
 end
