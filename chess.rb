@@ -19,26 +19,26 @@ class Board
 
   def play
     draw_screen
-    debugger
-    # gets
-    # system("clear")
-    # @white_pieces[11].move([3,3])
-    # draw_screen
-    # gets
-    # system("clear") 
-    # @white_pieces[11].move([4,3])
-    # draw_screen
-    # gets
-    # system("clear")
-    # @white_pieces[11].move([5,3])
-    # draw_screen
-    # gets
-    # system("clear")
-    # @white_pieces[11].move([6,4])
-    # draw_screen
-    # gets
-    # system("clear")
-    # draw_screen
+    #debugger
+    gets
+    system("clear")
+    @white_pieces[11].move([3,3])
+    draw_screen
+    gets
+    system("clear") 
+    @white_pieces[11].move([4,3])
+    draw_screen
+    gets
+    system("clear")
+    @white_pieces[11].move([5,3])
+    draw_screen
+    gets
+    system("clear")
+    @white_pieces[11].move([6,4])
+    draw_screen
+    gets
+    system("clear")
+    draw_screen
     #  test_piece = @white_pieces[11]
     #  p "pawn is at new space :#{test_piece.location}"
     #  p "captured pieces :#{@captured.count}"
