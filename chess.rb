@@ -19,14 +19,15 @@ class Board
   end
 
   def play
-    @white_pieces[11].move([2,3])
-    @white_pieces[12].move([3,4])
-    @white_pieces[11].move([2,4])
-    @white_pieces[13].move([4,5])
+    @white_pieces[11].move([3,3])
+    @white_pieces[11].move([4,3])
+    @white_pieces[11].move([5,3])
+    @white_pieces[11].move([6,3])
+
     test_piece = @white_pieces[11]
-  #   p "pawn is at new space :#{test_piece.location}"
-  #    p "captured pieces :#{@captured.count}"
-  #   @spaces.each {|space| p "#{space.position}, #{space.color}, #{space.contains.class}-#{space.contains && space.contains.color}"}
+    p "pawn is at new space :#{test_piece.location}"
+     p "captured pieces :#{@captured.count}"
+    @spaces.each {|space| p "#{space.position}, #{space.color}, #{space.contains.class}-#{space.contains && space.contains.color}"}
   end
 
   def generate_spaces
@@ -78,7 +79,7 @@ class Player
 
 end
 
-class Pieces
+class Piece
   attr_accessor :color, :location, :board
   def initialize(color, board)
     @color = color
@@ -117,7 +118,7 @@ class Pieces
 
 end
 
-class Pawn < Pieces
+class Pawn < Piece
   attr_accessor :color
   def initialize(color, board)
     super(color, board)
@@ -134,15 +135,26 @@ class Pawn < Pieces
     end
   end
 
+  def is_blocked?(move_to)
+    position = move_to[0] * 8 + move_to[1]
+    if @board.spaces[position].contains
+      true
+    else
+      false
+    end
+  end
+
+
   def valid_move?(move_to)
     position = move_to[0] * 8 + move_to[1]
+    possible_moves = []
     if @color == :white
-      possible_moves = [[1, 0]]
-      possible_moves += [[2,0]] if location[0] == 1
+      possible_moves += [[1, 0]] unless is_blocked?(move_to)
+      possible_moves += [[2,0]] if location[0] == 1  and !is_blocked?(move_to)
       possible_moves += [[1, -1], [1, 1]] if has_piece_to_capture?(position)
     else
-      possible_moves = [[-1, 0]]
-      possible_moves += [[-2,0]] if location[0] == 6
+      possible_moves += [[-1, 0]] unless is_blocked?(move_to)
+      possible_moves += [[-2,0]] if location[0] == 6 and !is_blocked?(move_to)
       possible_moves += [[-1, -1], [-1, 1]] if has_piece_to_capture?(position)
     end
 
@@ -152,13 +164,11 @@ class Pawn < Pieces
     end
     p "move #{move_to} possible moves = #{possible_moves}"
 
-
-
     is_space_open?(move_to) && possible_moves.include?(move_to)
   end
 end
 
-class Rook < Pieces
+class Rook < Piece
   def initialize(color, board)
     super(color, board)
   end
@@ -166,22 +176,14 @@ class Rook < Pieces
   end
 end
 
-class Bishop < Pieces
+class Bishop < Piece
   def initialize(color, board)
     super(color, board)
   end
   def move
   end
 end
-class Knight < Pieces
-  def initialize(color, board)
-    super(color, board)
-  end
-  def move
-  end
-end
-
-class Queen < Pieces
+class Knight < Piece
   def initialize(color, board)
     super(color, board)
   end
@@ -189,7 +191,15 @@ class Queen < Pieces
   end
 end
 
-class King < Pieces
+class Queen < Piece
+  def initialize(color, board)
+    super(color, board)
+  end
+  def move
+  end
+end
+
+class King < Piece
   attr_accessor :color
   def initialize(color, board)
     super(color, board)
