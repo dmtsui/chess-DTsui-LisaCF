@@ -1,6 +1,5 @@
 require 'debugger'
-class ChessGame
-end
+require 'colorize'
 
 class Board
   attr_accessor :spaces, :white_pieces, :black_pieces, :captured
@@ -19,15 +18,34 @@ class Board
   end
 
   def play
-    @white_pieces[11].move([3,3])
-    @white_pieces[11].move([4,3])
-    @white_pieces[11].move([5,3])
-    @white_pieces[11].move([6,3])
-
-    test_piece = @white_pieces[11]
-    p "pawn is at new space :#{test_piece.location}"
-     p "captured pieces :#{@captured.count}"
-    @spaces.each {|space| p "#{space.position}, #{space.color}, #{space.contains.class}-#{space.contains && space.contains.color}"}
+    draw_screen
+    debugger
+    # gets
+    # system("clear")
+    # @white_pieces[11].move([3,3])
+    # draw_screen
+    # gets
+    # system("clear") 
+    # @white_pieces[11].move([4,3])
+    # draw_screen
+    # gets
+    # system("clear")
+    # @white_pieces[11].move([5,3])
+    # draw_screen
+    # gets
+    # system("clear")
+    # @white_pieces[11].move([6,4])
+    # draw_screen
+    # gets
+    # system("clear")
+    # draw_screen
+    #  test_piece = @white_pieces[11]
+    #  p "pawn is at new space :#{test_piece.location}"
+    #  p "captured pieces :#{@captured.count}"
+    # @spaces.each {|space| p "#{space.position}, #{space.color}, #{space.contains.class}-#{space.contains && space.contains.color}"}
+    #@white_pieces.each {|piece| puts piece.display}
+    #@black_pieces.each {|piece| puts piece.display}
+    draw_screen
   end
 
   def generate_spaces
@@ -35,12 +53,13 @@ class Board
       row = position / 8
       col = position % 8
       if ((row + col) % 2).odd?
-        color = :white
+        color = :light_white
       else
-        color = :black
+        color = :light_black
       end
       @spaces << SpaceNode.new([row,col], color)
     end
+    @spaces.each {|space|space.add_neighbors(@spaces)}
   end
   def generate_pieces(piece_array, color)
     piece_array << Rook.new(color, self)
@@ -61,16 +80,90 @@ class Board
     piece_array.count.times do |i|
       piece_array[i].location=@spaces[i+k]
       @spaces[i+k].contains = piece_array[i]
-     end
+
+    end
   end
-  # set initial position of pieces
+  
+  def draw_screen
+    screen_array = []
+    8.times do |row|
+      temp_row = []
+      8.times do |col|
+        position = row * 8 + col
+        space_render = (@spaces[position].contains && @spaces[position].contains.display) || " . "
+        temp_row << space_render.colorize( :background => @spaces[position].color)
+      end
+      screen_array.unshift(temp_row)
+    end
+    puts "  " + ("A".."H").to_a.join("  ")
+    screen_array.each_with_index do |row, index|
+      puts "#{8-index}" + row.join("") + "#{8-index}" 
+    end
+    puts "  " + ("A".."H").to_a.join("  ")
+  end  
+
 end
 
 class SpaceNode
-  attr_accessor :color, :contains, :position
+  attr_accessor :color, :contains, :position, :neighbors
   def initialize(position, color)
     @position = position
     @color = color
+    @neighbors = {}
+  end
+
+  def add_neighbors(spaces)
+    position = @position[0] * 8 + @position[1]
+    neighbors_positions = {}
+    neighbors_positions[:left] = position - 1
+    neighbors_positions[:right] = position + 1
+    neighbors_positions[:top] = position + 8
+    neighbors_positions[:bottom] = position - 8
+    neighbors_positions[:topleft] = position + 8 - 1
+    neighbors_positions[:topright] = position + 8 + 1
+    neighbors_positions[:botleft] = position - 8 - 1
+    neighbors_positions[:botright] = position - 8 + 1   
+
+    no_top_edge(neighbors_positions, position)
+    no_bottom_edge(neighbors_positions, position)
+    no_left_edge(neighbors_positions, position)
+    no_right_edge(neighbors_positions, position)
+    #debugger
+    neighbors_positions.each do |key , pos|
+      @neighbors[key] = spaces[pos]
+    end
+  end
+
+  def no_top_edge(neighbors_positions, position)
+    if position / 8 == 7
+      neighbors_positions.delete(:topleft)
+      neighbors_positions.delete(:top)
+      neighbors_positions.delete(:topright)
+    end
+  end
+
+  def no_bottom_edge(neighbors_positions, position)
+    if position / 8 == 0
+      neighbors_positions.delete(:botleft)
+      neighbors_positions.delete(:bottom)
+      neighbors_positions.delete(:botright)
+    end
+  end
+
+  def no_left_edge(neighbors_positions, position)
+    if position % 8 == 0
+      neighbors_positions.delete(:topleft)
+      neighbors_positions.delete(:left)
+      neighbors_positions.delete(:botleft)
+    end
+  end
+
+  def no_right_edge(neighbors_positions, position)
+    if position % 8 == 7
+      neighbors_positions.delete(:topright)
+      neighbors_positions.delete(:right)
+      neighbors_positions.delete(:botright)
+    end
   end
 
 end
@@ -80,10 +173,11 @@ class Player
 end
 
 class Piece
-  attr_accessor :color, :location, :board
+  attr_accessor :color, :location, :board, :display
   def initialize(color, board)
     @color = color
     @board = board
+    @display = " . "
   end
 
   def location
@@ -104,7 +198,7 @@ class Piece
   end
 
   def capture_piece(position)
-    debugger
+    #debugger
     @board.captured << @board.spaces[position].contains
   end
 
@@ -122,6 +216,7 @@ class Pawn < Piece
   attr_accessor :color
   def initialize(color, board)
     super(color, board)
+    @display = (@color == :black && " \u265F ") || " \u2659 "
   end
   def move(move_to)
     position = move_to[0] * 8 + move_to[1]
@@ -171,6 +266,7 @@ end
 class Rook < Piece
   def initialize(color, board)
     super(color, board)
+    @display = (@color == :black && " \u265C ") || " \u2656 "
   end
   def move
   end
@@ -179,6 +275,7 @@ end
 class Bishop < Piece
   def initialize(color, board)
     super(color, board)
+    @display = (@color == :black && " \u265D ") || " \u2657 "
   end
   def move
   end
@@ -186,6 +283,7 @@ end
 class Knight < Piece
   def initialize(color, board)
     super(color, board)
+    @display = (@color == :black && " \u265E ") || " \u2658 "
   end
   def move
   end
@@ -194,6 +292,7 @@ end
 class Queen < Piece
   def initialize(color, board)
     super(color, board)
+    @display = (@color == :black && " \u265B ") || " \u2655 "
   end
   def move
   end
@@ -203,14 +302,17 @@ class King < Piece
   attr_accessor :color
   def initialize(color, board)
     super(color, board)
+    @display = (@color == :black && " \u265A ") || " \u2654 "
   end
   def move(move_to)
     position = move_to[0] * 8 + move_to[1]
     if valid_move?(move_to)
       capture_piece(position) if has_piece_to_capture?(position)
       @location.contains = nil
+      @location.display = "."
       @board.spaces[position].contains = self
       @location = @board.spaces[position]
+      @location.display = @display
     else
       p "Invalid Move!"
     end
@@ -222,7 +324,7 @@ class King < Piece
     possible_moves.select! do |pos|
       pos if (0..7).include?(pos[0]) and (0..7).include?(pos[1])
     end
-    p "possible moves : #{possible_moves}"
+    #p "possible moves : #{possible_moves}"
     is_space_open?(move_to) && possible_moves.include?(move_to)
   end
 
